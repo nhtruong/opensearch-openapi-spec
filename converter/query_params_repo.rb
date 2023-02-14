@@ -9,7 +9,7 @@ class QueryParamsRepo
   end
 
   def process(name, info)
-    raise "#{name} has already been used" if repo.include name && repo[name] != info
+    raise "#{name} has already been used" if repo.include? name && repo[name] != info
 
     repo[name] = info
     reference name

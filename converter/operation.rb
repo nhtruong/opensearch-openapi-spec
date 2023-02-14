@@ -11,36 +11,35 @@ class Operation
 
   # @param [QueryParamsRepo] repo
   def build(repo)
-    {
-      @method.downcase.to_sym => {
-        'x-endpoint-group': @group,
-        description: @src.dig('documentation', 'description'),
-        parameters: parse_params(repo),
-        requestBody: parse_body
-      }.compact
-    }
+    { 'x-endpoint-group': @group,
+      description: @src.dig('documentation', 'description'),
+      deprecated: @src['deprecated'],
+      parameters: parse_params(repo),
+      requestBody: parse_body }.compact
   end
 
   private
 
   # @param [QueryParamsRepo] repo
   def parse_params(repo)
+    return [] if @src['params'].nil?
+
     params = []
-    src.dig('url', 'paths').find { |p| p['path'] == @path }['parts'].each do |k, v|
-      #
-    end
-    src['params'].each { |k, v| @params.append({ '$ref': repo.process(k, v) }) }
+    # @src.dig('url', 'paths').find { |p| p['path'] == @path }['parts'].each do |k, v|
+    #   #
+    # end
+    @src['params'].each { |k, v| params.append({ '$ref': repo.process(k, v) }) }
     params
   end
 
   def parse_body
-    body = src['body']
-    return nil if %w[PUT POST].exclude?(@method) || body.nil?
+    body = @src['body']
+    return nil if %w[put post].exclude?(@method) || body.nil?
 
-    {
-      description: body['description'],
+    { description: body['description'],
       required: !!body['required'],
-      content: { '$ref': 'Content/TBD/genericJsonBody' }
-    }
+      content: { 'application/json': {
+        schema: { '$ref': 'Content/TBD/genericJsonBody' }
+      } } }.compact
   end
 end
