@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require_relative 'query_params_repo'
+require_relative 'param_converter'
+
 # OpenAPI Operation
 class Operation
   def initialize(group, path, method, src)
@@ -22,12 +25,13 @@ class Operation
 
   # @param [QueryParamsRepo] repo
   def parse_params(repo)
+    params = []
     return [] if @src['params'].nil?
 
-    params = []
-    # @src.dig('url', 'paths').find { |p| p['path'] == @path }['parts'].each do |k, v|
-    #   #
-    # end
+    @src.dig('url', 'paths').find { |p| p['path'] == @path }['parts']&.each do |k, v|
+      params.append convert_param('path', k, v)
+    end
+
     @src['params'].each { |k, v| params.append({ '$ref': repo.process(k, v) }) }
     params
   end

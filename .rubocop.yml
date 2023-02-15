@@ -15,3 +15,5 @@ Layout/EmptyLineAfterGuardClause:
   Enabled: false
 Style/DoubleNegation:
   Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
