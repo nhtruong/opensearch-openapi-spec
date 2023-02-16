@@ -13,32 +13,43 @@ class Converter
     @output_folder = Pathname.new output_folder
     @format = format
     @query_params_repo = QueryParamsRepo.new
+    @paths = {}
   end
 
   def generate
-    generate_endpoint_groups
-    generate_root
+    generate_paths
     generate_shared_params
     generate_shared_schemas
+    generate_root
   end
 
-  def generate_endpoint_groups
+  def generate_paths
     output = create_folder 'paths'
     @input_folder.children.each do |file|
-      JSON.parse(file.read).each do |name, src|
-        open_api_data = EndpointGroup.new(name, src).generate(@query_params_repo)
-        dump output, name, open_api_data
+      JSON.parse(file.read).each do |group, src|
+        @paths.deep_merge! EndpointGroup.new(group, src).generate(@query_params_repo)
       end
     end
+
+    @paths.each { |path, content| dump output, path_filename(path), content }
   end
 
-  def generate_root; end
+  def generate_root
+    content = {
+      openapi: '3.1.0',
+      info: { title: 'OpenSearch', version: '2.5' },
+      paths: @paths.keys.sort.each_with_object({}) do |path, paths|
+        paths[path] = { '$ref': "./paths/#{path_filename path}.#{@format}" }
+      end
+    }
+    dump @output_folder, 'opensearch.openapi', content
+  end
 
   def generate_shared_schemas
     output = create_folder 'schemas'
     schemas = {
       time: {
-        type: :string,
+        type: 'string',
         pattern: '^([0-9]+)(?:d|h|m|s|ms|micros|nanos)$'
       }
     }
@@ -51,6 +62,12 @@ class Converter
   end
 
   private
+
+  def path_filename(path)
+    path = path[1..]
+    path = '_' if path == ''
+    path.gsub('/', '.').gsub('{', '(').gsub('}', ')')
+  end
 
   def dump(folder, filename, d)
     filename = @format == 'yaml' ? "#{filename}.yaml" : "#{filename}.json"

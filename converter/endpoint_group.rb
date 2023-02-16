@@ -17,7 +17,7 @@ class EndpointGroup
       output[path_url] = {}
       path['methods'].each do |method|
         method = method.downcase
-        op = Operation.new(@group, path['path'], method, @src)
+        op = Operation.new(@group, path_url, method, @src)
         output[path_url][method] = op.build(repo)
       end
     end

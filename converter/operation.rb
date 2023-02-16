@@ -26,13 +26,12 @@ class Operation
   # @param [QueryParamsRepo] repo
   def parse_params(repo)
     params = []
-    return [] if @src['params'].nil?
 
     @src.dig('url', 'paths').find { |p| p['path'] == @path }['parts']&.each do |k, v|
       params.append convert_param('path', k, v)
     end
 
-    @src['params'].each { |k, v| params.append({ '$ref': repo.process(k, v) }) }
+    @src['params']&.each { |k, v| params.append({ '$ref': repo.process(k, v) }) }
     params
   end
 
@@ -42,8 +41,12 @@ class Operation
 
     { description: body['description'],
       required: !!body['required'],
-      content: { 'application/json': {
-        schema: { type: :object }
-      } } }.compact
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object'
+          }
+        }
+      } }.compact
   end
 end

@@ -37,8 +37,10 @@ class ParamConverter
     case @src['type']
     when 'number' then 'integer'
     when 'list' then 'array'
-    when 'time', 'enum' then 'string'
-    else @src['type']
+    when 'boolean' then 'boolean'
+    when 'time', 'enum', 'string' then 'string'
+    when 'number|string' then %w[integer string]
+    else raise "Unrecognized Data Type: #{@src['type']}"
     end
   end
 end
