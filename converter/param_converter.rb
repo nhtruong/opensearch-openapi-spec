@@ -26,11 +26,10 @@ class ParamConverter
 
   def schema
     return { '$ref': '../schemas/_common.yaml#/time' } if @src['type'] == 'time'
+    return { '$ref': '../schemas/_common.yaml#/string_array' } if @src['type'] == 'list'
 
     { type: data_type,
-      enum: @src['type'] == 'enum' ? @src['options'] : nil,
-      items: @src['type'] == 'array' ? { type: 'string' } : nil,
-      minItems: @src['type'] == 'array' ? 1 : nil }.compact
+      enum: @src['type'] == 'enum' ? @src['options'] : nil }.compact
   end
 
   def data_type

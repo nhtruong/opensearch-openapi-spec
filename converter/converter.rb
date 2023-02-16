@@ -51,6 +51,11 @@ class Converter
       time: {
         type: 'string',
         pattern: '^([0-9]+)(?:d|h|m|s|ms|micros|nanos)$'
+      },
+      string_array: {
+        type: 'array',
+        items: { type: 'string' },
+        minItems: 1
       }
     }
     dump output, '_common', schemas
