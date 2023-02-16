@@ -18,15 +18,20 @@ class ParamConverter
       deprecated: (!!dep unless dep.nil?),
       'x-deprecation-version': (dep['version'] if dep.is_a?(Hash)),
       'x-deprecation-description': (dep['description'] if dep.is_a?(Hash)),
-      schema: { type: data_type,
-                pattern: @src['type'] == 'time' ? '^([0-9]+)(?:d|h|m|s|ms|micros|nanos)$' : nil,
-                enum: @src['type'] == 'enum' ? @src['options'] : nil,
-                items: @src['type'] == 'array' ? { type: 'string' } : nil,
-                minItems: @src['type'] == 'array' ? 1 : nil }.compact
+      schema:
     }.compact
   end
 
   private
+
+  def schema
+    return { '$ref': '../schemas/_common.yaml#/time' } if @src['type'] == 'time'
+
+    { type: data_type,
+      enum: @src['type'] == 'enum' ? @src['options'] : nil,
+      items: @src['type'] == 'array' ? { type: 'string' } : nil,
+      minItems: @src['type'] == 'array' ? 1 : nil }.compact
+  end
 
   def data_type
     case @src['type']

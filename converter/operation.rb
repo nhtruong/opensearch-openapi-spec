@@ -43,7 +43,7 @@ class Operation
     { description: body['description'],
       required: !!body['required'],
       content: { 'application/json': {
-        schema: { '$ref': 'Content/TBD/genericJsonBody' }
+        schema: { type: :object }
       } } }.compact
   end
 end

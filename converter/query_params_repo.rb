@@ -1,11 +1,19 @@
 # frozen_string_literal: true
 
+require_relative 'param_converter'
+
 # Repository for shared query string params
 class QueryParamsRepo
   attr_reader :repo
 
   def initialize
     @repo = {}
+  end
+
+  def generate
+    repo.to_a.sort_by(&:first).to_h do |name, src|
+      [name, convert_param('query', name, src)]
+    end
   end
 
   def process(name, info)
@@ -16,7 +24,7 @@ class QueryParamsRepo
   end
 
   def reference(name)
-    "Params/TBD/#{name}"
+    "../parameters/query.yaml#/#{name}"
   end
 
   def collision_message(name, info)
