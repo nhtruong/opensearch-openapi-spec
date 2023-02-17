@@ -28,7 +28,7 @@ class Operation
     params = []
 
     @src.dig('url', 'paths').find { |p| p['path'] == @path }['parts']&.each do |k, v|
-      params.append convert_param('path', k, v)
+      params.append convert_param('path', k, v, repo.format)
     end
 
     @src['params']&.each { |k, v| params.append({ '$ref': repo.process(k, v) }) }

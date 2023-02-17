@@ -8,30 +8,30 @@ require_relative 'query_params_repo'
 
 # Convert OpenSearch JsonSchema Spec to OpenAPI Spec
 class Converter
-  def initialize(input_folder, output_folder, format = 'yaml')
+  def initialize(input_folder, output_folder, format: :yaml)
     @input_folder = Pathname.new input_folder
     @output_folder = Pathname.new output_folder
     @format = format
-    @query_params_repo = QueryParamsRepo.new
+    @query_params_repo = QueryParamsRepo.new @format
     @paths = {}
   end
 
   def generate
     generate_paths
-    generate_shared_params
+    generate_query_params
     generate_shared_schemas
     generate_root
   end
 
   def generate_paths
-    output = create_folder 'paths'
+    folder = create_folder 'paths'
     @input_folder.children.each do |file|
       JSON.parse(file.read).each do |group, src|
         @paths.deep_merge! EndpointGroup.new(group, src).generate(@query_params_repo)
       end
     end
 
-    @paths.each { |path, content| dump output, path_filename(path), content }
+    @paths.each { |path, content| dump folder, path_filename(path), content }
   end
 
   def generate_root
@@ -46,7 +46,6 @@ class Converter
   end
 
   def generate_shared_schemas
-    output = create_folder 'schemas'
     schemas = {
       time: {
         type: 'string',
@@ -58,12 +57,11 @@ class Converter
         minItems: 1
       }
     }
-    dump output, '_common', schemas
+    dump create_folder('schemas'), '_common', schemas
   end
 
-  def generate_shared_params
-    output = create_folder 'parameters'
-    dump output, 'query', @query_params_repo.generate
+  def generate_query_params
+    dump create_folder('parameters'), 'query', @query_params_repo.generate
   end
 
   private
@@ -74,15 +72,17 @@ class Converter
     path.gsub('/', '.').gsub('{', '(').gsub('}', ')')
   end
 
-  def dump(folder, filename, d)
-    filename = @format == 'yaml' ? "#{filename}.yaml" : "#{filename}.json"
-    content = @format == 'yaml' ? YAML.dump(d.deep_stringify_keys).gsub('"$ref"', '$ref') : JSON.pretty_generate(d)
+  def dump(folder, filename, data)
+    yaml = @format.downcase.to_sym == :yaml
+    filename = yaml ? "#{filename}.yaml" : "#{filename}.json"
+    content = yaml ? YAML.dump(data.deep_stringify_keys).gsub('"$ref"', '$ref') : JSON.pretty_generate(data)
     folder.join(filename).write(content)
   end
 
   def create_folder(name)
     folder = @output_folder.join name
-    Dir.mkdir folder unless folder.exist?
+    folder.rmtree if folder.exist?
+    folder.mkdir unless folder.exist?
     folder
   end
 end

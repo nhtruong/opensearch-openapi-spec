@@ -2,10 +2,11 @@
 
 # OpenAPI Parameter Converter
 class ParamConverter
-  def initialize(loc, name, src)
+  def initialize(loc, name, src, format)
     @loc = loc
     @name = name
     @src = src
+    @format = format
   end
 
   def convert
@@ -25,8 +26,8 @@ class ParamConverter
   private
 
   def schema
-    return { '$ref': '../schemas/_common.yaml#/time' } if @src['type'] == 'time'
-    return { '$ref': '../schemas/_common.yaml#/string_array' } if @src['type'] == 'list'
+    return { '$ref': "../schemas/_common.#{@format}#/time" } if @src['type'] == 'time'
+    return { '$ref': "../schemas/_common.#{@format}#/string_array" } if @src['type'] == 'list'
 
     { type: data_type,
       enum: @src['type'] == 'enum' ? @src['options'] : nil }.compact
@@ -44,8 +45,8 @@ class ParamConverter
   end
 end
 
-def convert_param(loc, name, src)
-  ParamConverter.new(loc, name, src).convert
+def convert_param(loc, name, src, format)
+  ParamConverter.new(loc, name, src, format).convert
 rescue StandardError => e
   pp loc, name, src
   raise e
