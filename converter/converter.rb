@@ -8,12 +8,15 @@ require_relative 'query_params_repo'
 
 # Convert OpenSearch JsonSchema Spec to OpenAPI Spec
 class Converter
+  attr_reader :operation_count
+
   def initialize(input_folder, output_folder, format: :yaml)
     @input_folder = Pathname.new input_folder
     @output_folder = Pathname.new output_folder
     @format = format
     @query_params_repo = QueryParamsRepo.new @format
     @paths = {}
+    @operation_count = 0
   end
 
   def generate
@@ -27,7 +30,9 @@ class Converter
     folder = create_folder 'paths'
     @input_folder.children.each do |file|
       JSON.parse(file.read).each do |group, src|
-        @paths.deep_merge! EndpointGroup.new(group, src).generate(@query_params_repo)
+        endpoint_group = EndpointGroup.new(group, src)
+        @paths.deep_merge! endpoint_group.generate(@query_params_repo)
+        @operation_count += endpoint_group.count
       end
     end
 
